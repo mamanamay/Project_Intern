@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { MapPin, Phone, Mail, Github, Linkedin, User } from '@lucide/svelte';
+  import { MapPin, Phone, Mail, Code, Briefcase, User } from '@lucide/svelte';
   import EditableText from './EditableText.svelte';
   import { isAdmin } from '$lib/stores/cv';
   import type { CvData } from '$lib/api';
@@ -46,7 +46,7 @@
               rel="noopener noreferrer"
               class="social-btn social-github"
             >
-              <Github size={16} />
+              <Code size={16} />
               GitHub
             </a>
           {/if}
@@ -57,7 +57,7 @@
               rel="noopener noreferrer"
               class="social-btn social-linkedin"
             >
-              <Linkedin size={16} />
+              <Briefcase size={16} />
               LinkedIn
             </a>
           {/if}
