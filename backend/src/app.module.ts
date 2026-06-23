@@ -12,15 +12,19 @@ import { CvModule } from './modules/cv/cv.module';
     // Config — available globally
     ConfigModule.forRoot({ isGlobal: true }),
 
-    // Database
+    // Database — configurable via environment variables
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
-        type: 'postgres',
-        url: config.get<string>('DATABASE_URL'),
+        type: (config.get<string>('DB_TYPE', 'sqlite') as any),
+        database: config.get<string>('DB_DATABASE', 'database.sqlite'),
+        host: config.get<string>('DB_HOST', undefined),
+        port: config.get<number>('DB_PORT', undefined),
+        username: config.get<string>('DB_USERNAME', undefined),
+        password: config.get<string>('DB_PASSWORD', undefined),
         autoLoadEntities: true,
-        synchronize: config.get<string>('NODE_ENV') === 'development',
+        synchronize: true,
         logging: config.get<string>('NODE_ENV') === 'development',
       }),
     }),

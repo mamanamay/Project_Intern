@@ -20,11 +20,9 @@ services:
     volumes:
       - ./frontend:/app
       - /app/node_modules
-      - /app/.next
     environment:
       - NODE_ENV=development
-      - NEXT_PUBLIC_API_URL=http://localhost/api
-      - WATCHPACK_POLLING=true
+      - VITE_API_URL=http://localhost/api
     networks:
       - app-network
 
@@ -38,6 +36,12 @@ services:
     environment:
       - NODE_ENV=development
       - DATABASE_URL=postgresql://appuser:changeme@postgres:5432/appdb
+      - DB_TYPE=postgres
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_DATABASE=appdb
+      - DB_USERNAME=appuser
+      - DB_PASSWORD=changeme
       - REDIS_URL=redis://redis:6379
       - JWT_SECRET=dev-secret-change-in-production-min-32-chars
       - JWT_EXPIRES_IN=7d
