@@ -5,7 +5,7 @@ export class Cv {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'simple-json', default: {} })
+  @Column({ type: 'simple-json' })
   data: any;
 
   @UpdateDateColumn()
