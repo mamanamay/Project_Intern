@@ -10,7 +10,7 @@ import { CvModule } from './modules/cv/cv.module';
 @Module({
   imports: [
     // Config — available globally
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({ isGlobal: true, envFilePath: '../.env' }),
 
     // Database — configurable via environment variables
     TypeOrmModule.forRootAsync({

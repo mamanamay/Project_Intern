@@ -6,7 +6,7 @@
   <div class="navbar-inner">
     <a href="#profile" class="navbar-brand">
       <Terminal size={20} />
-      <span>&lt; /&gt; Portfolio</span>
+      <span>Portfolio</span>
     </a>
     <div class="navbar-links">
       <a href="#profile">โปรไฟล์</a>

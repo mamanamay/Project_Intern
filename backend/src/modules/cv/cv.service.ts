@@ -8,7 +8,7 @@ export const initialCvData = {
   profile: {
     name: 'NAPATWAN CHAIBAN',
     location: 'KHON KAEN, THAILAND',
-    phone: '+66894162399',
+    phone: '061-628-3810',
     email: 'napatwan.c@kkumail.com',
     summary: 'I am currently a third-year student majoring in Cybersecurity at the College of Computing, Khon Kaen University. seeking an internship in Cybersecurity and IT/Network roles. Familiar with network fundamentals, security assessment, and traffic analysis, with hands-on experience using Wireshark, Burp Suite, Nmap, Metasploit, Linux and basic programming (Python/C). Built projects in IoT security testing, Android malware analysis, and a CTF platform, and ready to contribute while learning across both domains'
   },
@@ -66,8 +66,8 @@ export const initialCvData = {
     tools: 'Godot Engine, Vue.js, Firebase, Nmap, Hydra, Metasploit, Burp Suite, Wireshark, Frida, Jadx-GUI, APKTool, VS Code, Linux (Kali/Ubuntu), Office365'
   },
   socialLinks: {
-    github: 'https://github.com/napatwan',
-    linkedin: 'https://linkedin.com/in/napatwan'
+    github: 'https://github.com/mamanamay',
+    linkedin: 'https://www.linkedin.com/in/napatwan-chaiban-436798348/'
   }
 };
 
