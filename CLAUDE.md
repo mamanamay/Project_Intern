@@ -1,6 +1,6 @@
 # CLAUDE.md — Project Intelligence
 
-ไฟล์นี้เป็น **แหล่งข้อมูลหลัก** สำหรับ Claude (และนักพัฒนาทุกคน) ที่ทำงานกับ codebase นี้  
+ไฟล์นี้เป็น **แหล่งข้อมูลหลัก** สำหรับ AI Assistant และนักพัฒนาที่ต้องการทำความเข้าใจ codebase  
 **อ่านไฟล์นี้ก่อนแก้ไขไฟล์ใด ๆ**
 
 ---
@@ -10,9 +10,11 @@
 | รายการ | รายละเอียด |
 |---|---|
 | **ชื่อ** | CV/Portfolio ของ นภัสรวรรณ ชัยบาล (Napatwan Chaiban) |
-| **Stack** | SvelteKit · NestJS · PostgreSQL · Redis · Nginx · Docker |
-| **รูปแบบ** | Monorepo (frontend + backend ใน repo เดียว, ควบคุมด้วย Docker Compose) |
-| **ภาษาที่ใช้** | TypeScript ทั้ง frontend และ backend |
+| **Stack** | SvelteKit 2 · NestJS 10 · PostgreSQL 16 · Redis 7 · Nginx 1.25 · Docker |
+| **รูปแบบ** | Monorepo (`frontend/` + `backend/` ใน repo เดียว, orchestrate ด้วย Docker Compose) |
+| **ภาษา** | TypeScript ทั้ง frontend และ backend, UI เป็นภาษาไทย |
+| **HTTPS** | Self-Signed SSL Certificate (Nginx terminate TLS) |
+| **DB สำหรับ Local** | SQLite (ไม่ต้องลง PostgreSQL แยก) |
 
 ---
 
@@ -20,111 +22,183 @@
 
 ```
 Project_Intern/
-├── frontend/              # SvelteKit (Vite dev server, port 3000)
+├── frontend/                        # SvelteKit 2 + Vite 6 (port 3000 prod / 5173 dev)
 │   ├── src/
-│   │   ├── routes/        # หน้าเว็บและ layout (+page.svelte, +layout.svelte)
-│   │   ├── lib/           # โมดูลที่ใช้ร่วมกัน (api.ts, components, utils)
-│   │   └── app.html       # HTML template หลัก
-│   ├── static/            # ไฟล์ static (รูปภาพ, favicon)
-│   ├── svelte.config.js   # ตั้งค่า SvelteKit
-│   ├── vite.config.ts     # ตั้งค่า Vite
-│   ├── Dockerfile         # Production (multi-stage build)
-│   └── Dockerfile.dev     # Development (hot-reload)
+│   │   ├── routes/
+│   │   │   ├── +layout.svelte      # Root layout (Navbar + Footer + slot)
+│   │   │   └── +page.svelte        # หน้าหลัก (แสดง CV ทั้งหมด + ปุ่ม Admin)
+│   │   ├── lib/
+│   │   │   ├── api.ts              # Centralized API client (apiFetch, cvApi, authApi, SSE)
+│   │   │   ├── stores/
+│   │   │   │   └── cv.ts           # Svelte writable store (cvData, isAdmin, editingField)
+│   │   │   └── components/
+│   │   │       ├── Navbar.svelte        # แถบเมนูบนสุด (โลโก้ + ลิงก์นำทาง)
+│   │   │       ├── ProfileCard.svelte   # ข้อมูลส่วนตัว (ชื่อ, email, โทร, GitHub, LinkedIn)
+│   │   │       ├── EducationCard.svelte # ประวัติการศึกษา
+│   │   │       ├── CertCard.svelte      # ใบรับรอง (Certifications)
+│   │   │       ├── AchievementCard.svelte # ผลงานและรางวัล
+│   │   │       ├── SkillsSection.svelte # ทักษะ (Programming + Tools)
+│   │   │       ├── ProjectCard.svelte   # โปรเจคที่เคยทำ
+│   │   │       ├── EditableText.svelte  # Component สำหรับแก้ไขข้อความ (Admin Mode)
+│   │   │       ├── LoadingScreen.svelte # หน้าจอ Loading
+│   │   │       └── Footer.svelte        # Footer ด้านล่าง
+│   │   ├── app.html                # HTML shell (Google Fonts, meta tags)
+│   │   └── app.css                 # Global CSS (Cybersecurity Dark Theme, 500+ บรรทัด)
+│   ├── svelte.config.js            # ตั้งค่า SvelteKit (adapter-node)
+│   ├── vite.config.ts              # ตั้งค่า Vite (proxy /api → localhost:3001)
+│   ├── tsconfig.json               # TypeScript config
+│   ├── package.json                # Dependencies (svelte 5, vite 6, @lucide/svelte)
+│   ├── Dockerfile                  # Production (multi-stage build)
+│   └── Dockerfile.dev              # Development (hot-reload)
 │
-├── backend/               # NestJS REST API (port 3001)
+├── backend/                         # NestJS 10 REST API (port 3001)
 │   ├── src/
 │   │   ├── modules/
-│   │   │   ├── auth/      # JWT authentication (login/register)
-│   │   │   ├── users/     # จัดการข้อมูลผู้ใช้
-│   │   │   ├── cv/        # จัดการข้อมูล CV (CRUD + stream)
-│   │   │   └── health/    # Health check endpoint
-│   │   ├── common/        # Guards, decorators, filters ที่ใช้ร่วมกัน
-│   │   ├── app.module.ts  # Root module
-│   │   └── main.ts        # Entry point
-│   ├── Dockerfile
-│   └── Dockerfile.dev
+│   │   │   ├── auth/
+│   │   │   │   ├── auth.module.ts       # Auth module (JWT + Passport)
+│   │   │   │   ├── auth.controller.ts   # POST /auth/register, POST /auth/login
+│   │   │   │   ├── auth.service.ts      # Login/register logic (bcrypt hashing)
+│   │   │   │   ├── dto/                 # DTO validation (class-validator)
+│   │   │   │   └── guards/
+│   │   │   │       └── jwt.strategy.ts  # JWT Strategy (Passport)
+│   │   │   ├── users/
+│   │   │   │   ├── users.module.ts
+│   │   │   │   ├── users.service.ts
+│   │   │   │   └── entities/
+│   │   │   │       └── user.entity.ts   # User entity (id, email, password, role)
+│   │   │   ├── cv/
+│   │   │   │   ├── cv.module.ts
+│   │   │   │   ├── cv.controller.ts     # GET /cv, PATCH /cv, SSE /cv/stream
+│   │   │   │   ├── cv.service.ts        # ★ initialCvData อยู่ที่นี่ (ข้อมูล CV เริ่มต้น)
+│   │   │   │   └── entities/
+│   │   │   │       └── cv.entity.ts     # CV entity (id, data JSON, updatedAt)
+│   │   │   └── health/
+│   │   │       └── health.controller.ts # GET /health
+│   │   ├── app.module.ts               # Root module (ConfigModule, TypeORM, Auth, CV)
+│   │   └── main.ts                     # Entry point (port 3001, CORS, ValidationPipe)
+│   ├── package.json                # Dependencies (NestJS 10, TypeORM, bcrypt, sqlite3, pg)
+│   ├── Dockerfile                  # Production
+│   └── Dockerfile.dev              # Development
 │
 ├── nginx/
-│   └── nginx.conf         # Reverse proxy + Vite HMR WebSocket
+│   ├── nginx.conf                  # Reverse proxy (HTTP→HTTPS redirect, TLS 1.2/1.3)
+│   └── ssl/
+│       ├── server.crt              # Self-Signed SSL Certificate (365 วัน)
+│       ├── server.key              # Private Key (อยู่ใน .gitignore)
+│       └── generate-cert.sh        # Script สร้าง certificate ใหม่
 │
-├── docs/                  # เอกสารเพิ่มเติม (architecture, ADRs)
-├── .github/workflows/     # CI/CD pipelines
-├── docker-compose.yml     # Production
-├── docker-compose.dev.yml # Development (hot-reload)
-├── .env.example           # Template สำหรับ environment variables
-├── CLAUDE.md              ← คุณอยู่ที่นี่
-└── README.md
+├── docs/
+│   └── architecture.md             # แผนภาพสถาปัตยกรรมระบบ
+│
+├── .github/workflows/
+│   └── ci.yml                      # CI pipeline
+│
+├── docker-compose.yml              # Production (Nginx + Frontend + Backend + PostgreSQL + Redis)
+├── docker-compose.dev.yml          # Development (hot-reload + exposed ports)
+├── .env.example                    # Template ตัวแปรสภาพแวดล้อม
+├── .env                            # ตัวแปรจริง (อยู่ใน .gitignore)
+├── .gitignore                      # ไฟล์ที่ไม่ push ขึ้น Git
+├── CLAUDE.md                       ← คุณอยู่ที่นี่
+└── README.md                       # เอกสารสำหรับผู้ใช้ทั่วไป
 ```
 
 ---
 
 ## สถาปัตยกรรมระบบ
 
-```
-Browser → Nginx :80/:443
-              ├── /api/*       → backend:3001  (NestJS)
-              ├── /__vite_hmr  → frontend:3000 (Vite HMR WebSocket — dev เท่านั้น)
-              └── /*           → frontend:3000 (SvelteKit)
+### ผ่าน Docker (Production / Dev)
 
-backend → PostgreSQL :5432
-backend → Redis       :6379
 ```
-
-```mermaid
-graph LR
-    A[Browser] --> B[Nginx :80]
-    B -->|/api/*| C[NestJS :3001]
-    B -->|/__vite_hmr| D[SvelteKit :3000]
-    B -->|/*| D
-    C --> E[(PostgreSQL :5432)]
-    C --> F[(Redis :6379)]
+Browser
+  │
+  ▼
+Nginx :80/:443  (SSL termination, HTTP→HTTPS redirect)
+  │
+  ├── /api/*       → backend:3001  (NestJS REST API)
+  ├── /__vite_hmr  → frontend:3000 (Vite HMR WebSocket — dev เท่านั้น)
+  └── /*           → frontend:3000 (SvelteKit SSR)
+                        │
+backend:3001 ───────────┤
+  ├── PostgreSQL :5432  │  (ฐานข้อมูลหลัก)
+  └── Redis      :6379  │  (Cache / Session)
 ```
 
-ทุก service สื่อสารผ่าน Docker network `app-network`  
-**Nginx เป็นจุดเข้าถึงเดียว** ที่เปิดสู่ภายนอก
+### รัน Local (ไม่มี Docker)
+
+```
+Browser
+  │
+  ├── http://localhost:5173  → SvelteKit Dev Server (Vite)
+  │     └── /api/*           → Proxy rewrite ลบ /api → localhost:3001
+  │
+  └── http://localhost:3001  → NestJS Backend
+        └── SQLite (database.sqlite ในโฟลเดอร์ backend/)
+```
+
+**สำคัญ:** เมื่อรัน Local ไม่ผ่าน Docker:
+- Frontend ใช้ Vite proxy ใน `vite.config.ts` แทน Nginx
+- Vite proxy มี `rewrite: (path) => path.replace(/^\/api/, '')` เพื่อลบ `/api` prefix
+- Backend ใช้ SQLite แทน PostgreSQL (ตั้งค่า `DB_TYPE=sqlite` ใน `.env`)
+- ไม่ต้องใช้ Redis
 
 ---
 
-## ตัวแปรสภาพแวดล้อม (Environment Variables)
+## ตัวแปรสภาพแวดล้อม (.env)
 
 คัดลอก `.env.example` → `.env` ก่อนรันทุกครั้ง
 
-| ตัวแปร | ใช้โดย | คำอธิบาย |
-|---|---|---|
-| `NODE_ENV` | ทั้งสอง | `development` หรือ `production` |
-| `DB_TYPE` | backend | ชนิดฐานข้อมูล (`postgres` หรือ `sqlite`) |
-| `DB_HOST` | backend | Host ของฐานข้อมูล (ใน Docker ใช้ `postgres`) |
-| `DB_PORT` | backend | Port ฐานข้อมูล (PostgreSQL = `5432`) |
-| `DB_DATABASE` | backend | ชื่อฐานข้อมูล |
-| `DB_USERNAME` | backend | Username สำหรับเชื่อมต่อ DB |
-| `DB_PASSWORD` | backend | Password สำหรับเชื่อมต่อ DB |
-| `REDIS_URL` | backend | Redis connection string |
-| `JWT_SECRET` | backend | Secret สำหรับเซ็น JWT (อย่างน้อย 32 ตัวอักษร) |
-| `JWT_EXPIRES_IN` | backend | อายุของ JWT token (เช่น `7d`) |
-| `VITE_API_URL` | frontend | URL ของ API ที่ browser เห็น |
-| `POSTGRES_USER` | postgres | User สำหรับ container PostgreSQL |
-| `POSTGRES_PASSWORD` | postgres | Password สำหรับ container PostgreSQL |
-| `POSTGRES_DB` | postgres | ชื่อ DB ที่สร้างอัตโนมัติ |
-| `ALLOWED_ORIGIN` | backend | Origin ที่อนุญาตสำหรับ CORS |
+| ตัวแปร | ใช้โดย | Docker | Local | คำอธิบาย |
+|---|---|---|---|---|
+| `NODE_ENV` | ทั้งสอง | `production` | `development` | โหมดการทำงาน |
+| `DB_TYPE` | backend | `postgres` | `sqlite` | ชนิดฐานข้อมูล |
+| `DB_HOST` | backend | `postgres` | ไม่ใช้ | Host ฐานข้อมูล |
+| `DB_PORT` | backend | `5432` | ไม่ใช้ | Port ฐานข้อมูล |
+| `DB_DATABASE` | backend | `appdb` | `database.sqlite` | ชื่อ/ไฟล์ฐานข้อมูล |
+| `DB_USERNAME` | backend | `appuser` | ไม่ใช้ | Username DB |
+| `DB_PASSWORD` | backend | `changeme` | ไม่ใช้ | Password DB |
+| `REDIS_URL` | backend | `redis://redis:6379` | ไม่ใช้ | Redis connection |
+| `JWT_SECRET` | backend | ค่าที่ซับซ้อน | ค่าที่ซับซ้อน | Secret สำหรับ JWT (≥32 ตัวอักษร) |
+| `JWT_EXPIRES_IN` | backend | `7d` | `7d` | อายุ JWT token |
+| `VITE_API_URL` | frontend | `https://localhost/api` | `/api` | URL ของ API ที่ browser เห็น |
+| `ALLOWED_ORIGIN` | backend | `https://localhost` | `http://localhost` | CORS allowed origin |
 
-> **หมายเหตุ:** ตัวแปร `VITE_*` จะถูกส่งไปยัง browser โดยอัตโนมัติ (เหมือน `NEXT_PUBLIC_*` ใน Next.js)  
-> ห้ามใส่ค่า secret ใน `VITE_*` เด็ดขาด
+> **⚠️ สำคัญ:**
+> - ตัวแปร `VITE_*` จะถูกส่งไปยัง browser — **ห้ามใส่ค่า secret**
+> - เมื่อรัน Local ให้ตั้ง `VITE_API_URL=/api` (ใช้ Vite proxy)
+> - เมื่อรันผ่าน Docker ให้ตั้ง `VITE_API_URL=https://localhost/api` (ผ่าน Nginx)
+> - `ConfigModule` ใน `app.module.ts` อ่านไฟล์ `.env` จาก `../` (parent directory ของ backend)
 
 ---
 
 ## คำสั่งที่ใช้บ่อย
 
-### Development (hot-reload)
+### รัน Local (ไม่มี Docker)
+
 ```bash
-# สร้างและรันทุก service พร้อม hot-reload
+# ── ขั้นตอนแรก (ครั้งเดียว) ──
+cp .env.example .env
+# แก้ไข .env: DB_TYPE=sqlite, VITE_API_URL=/api
+
+# ── ลง dependencies ──
+cd backend && npm ci && cd ..
+cd frontend && npm ci && cd ..
+
+# ── เปิด Terminal หน้าต่างที่ 1 (Backend) ──
+cd backend
+npm run start:dev
+# รอจนขึ้น "Backend running on port 3001"
+
+# ── เปิด Terminal หน้าต่างที่ 2 (Frontend) ──
+cd frontend
+npm run dev
+# เปิดเบราว์เซอร์ที่ http://localhost:5173
+```
+
+### Docker Development (hot-reload)
+
+```bash
 docker compose -f docker-compose.dev.yml up --build
-
-# รัน background
-docker compose -f docker-compose.dev.yml up -d --build
-
-# ดู logs
-docker compose -f docker-compose.dev.yml logs -f frontend
-docker compose -f docker-compose.dev.yml logs -f backend
+# เปิดเบราว์เซอร์ที่ https://localhost (ยอมรับ self-signed cert)
 
 # หยุดและลบ containers
 docker compose -f docker-compose.dev.yml down
@@ -133,34 +207,56 @@ docker compose -f docker-compose.dev.yml down
 docker compose -f docker-compose.dev.yml down -v
 ```
 
-### Production
+### Docker Production
+
 ```bash
-# สร้างและรัน production
 docker compose up -d --build
-
-# ตรวจสอบสถานะ
-docker compose ps
-
-# หยุด production
-docker compose down
+docker compose ps          # ตรวจสอบสถานะ
+docker compose logs -f     # ดู logs
+docker compose down        # หยุด
 ```
 
-### รัน backend อย่างเดียว (local)
-```bash
-cd backend && npm install && npm run start:dev
-```
+---
 
-### รัน frontend อย่างเดียว (local)
-```bash
-cd frontend && npm install && npm run dev
-```
+## API Endpoints
 
-### Database migrations
-```bash
-docker compose exec backend npm run migration:run
-docker compose exec backend npm run migration:generate -- -n MigrationName
-docker compose exec backend npm run migration:revert
-```
+ทุก endpoint อยู่ภายใต้ prefix `/api/` (Nginx strip ออกก่อนส่งไป backend)
+
+| Method | Path | Auth | คำอธิบาย |
+|--------|------|:----:|----------|
+| `POST` | `/api/auth/register` | ❌ | ลงทะเบียนผู้ใช้ใหม่ |
+| `POST` | `/api/auth/login` | ❌ | เข้าสู่ระบบ → รับ JWT token |
+| `GET` | `/api/health` | ❌ | ตรวจสอบสถานะระบบ |
+| `GET` | `/api/cv` | ❌ | ดึงข้อมูล CV (ถ้ายังไม่มีจะสร้างจาก `initialCvData`) |
+| `PATCH` | `/api/cv` | ❌* | อัปเดตข้อมูล CV |
+| `GET` | `/api/cv/stream` | ❌ | Stream ข้อมูล CV แบบ Real-time (SSE) |
+
+> *หมายเหตุ: CV endpoints ปัจจุบันยังไม่มี JWT guard — สามารถเพิ่มได้ภายหลัง
+
+---
+
+## ไฟล์สำคัญที่ต้องรู้ (สำหรับแก้ไขเนื้อหา)
+
+### แก้ข้อมูล CV เริ่มต้น (ชื่อ, ประวัติ, โปรเจค, ทักษะ)
+📁 `backend/src/modules/cv/cv.service.ts` — ตัวแปร `initialCvData` (บรรทัด 7-72)
+
+### แก้หน้าตา UI / ไอคอน / โครงสร้างหน้าจอ
+| สิ่งที่ต้องการแก้ | ไฟล์ |
+|---|---|
+| แถบเมนูบนสุด (โลโก้, เมนู) | `frontend/src/lib/components/Navbar.svelte` |
+| ข้อมูลส่วนตัว (ชื่อ, อีเมล, GitHub, LinkedIn) | `frontend/src/lib/components/ProfileCard.svelte` |
+| ประวัติการศึกษา | `frontend/src/lib/components/EducationCard.svelte` |
+| ใบรับรอง (Certifications) | `frontend/src/lib/components/CertCard.svelte` |
+| ผลงานและรางวัล | `frontend/src/lib/components/AchievementCard.svelte` |
+| ทักษะ | `frontend/src/lib/components/SkillsSection.svelte` |
+| โปรเจค | `frontend/src/lib/components/ProjectCard.svelte` |
+| สี, ธีม, พื้นหลัง, animation | `frontend/src/app.css` |
+| โครงสร้างหน้าแรก (Layout) | `frontend/src/routes/+page.svelte` |
+| ชื่อบน Tab เบราว์เซอร์ | `frontend/src/routes/+page.svelte` (บรรทัด `<title>`) |
+| HTML template (Fonts, Meta) | `frontend/src/app.html` |
+
+### ไอคอน
+ใช้ไลบรารี **Lucide** (`@lucide/svelte`) — ดูรายชื่อไอคอนทั้งหมดที่ https://lucide.dev
 
 ---
 
@@ -168,95 +264,54 @@ docker compose exec backend npm run migration:revert
 
 ### Frontend (SvelteKit)
 - ใช้ **file-based routing** ใน `src/routes/`
-- แต่ละหน้าเว็บคือ `+page.svelte`, layout คือ `+layout.svelte`
-- ข้อมูลที่ต้อง load ฝั่ง server ใช้ `+page.server.ts` หรือ `+page.ts`
-- API calls รวมอยู่ที่ `src/lib/api.ts` — ห้ามใช้ `fetch()` ตรง ๆ
+- แต่ละหน้า = `+page.svelte`, layout = `+layout.svelte`
+- API calls รวมที่ `src/lib/api.ts` — **ห้ามใช้ `fetch()` ตรง ๆ**
 - ตัวแปร environment ฝั่ง client ต้องขึ้นต้นด้วย `VITE_`
-- ใช้ **Tailwind CSS** สำหรับ styling — ห้ามใช้ inline styles
-- ข้อความ UI เป็นภาษาไทย, ชื่อตัวแปรเป็นภาษาอังกฤษ
-- ใช้ TypeScript strict mode
+- ใช้ **Vanilla CSS** (Cybersecurity Dark Theme) ใน `app.css`
+- ข้อความ UI เป็น **ภาษาไทย**, ชื่อตัวแปร/ฟังก์ชันเป็นภาษาอังกฤษ
+- ใช้ Svelte 5 runes syntax
 
 ### Backend (NestJS)
 - โครงสร้างแบบ feature-based: `src/modules/<feature>/`
 - แต่ละ module มี: `controller`, `service`, `dto`, `entity`, `module`
 - DTOs ใช้ `class-validator` decorators
-- ทุก endpoint ต้องผ่าน JWT guard ยกเว้นติด decorator `@Public()`
 - ใช้ `ConfigService` เสมอ — **ห้ามใช้ `process.env` โดยตรง**
-- Errors ใช้ NestJS `HttpException` subclasses
-- ฐานข้อมูลเชื่อมต่อผ่าน TypeORM
+- `ConfigModule.forRoot()` อ่าน `.env` จาก `envFilePath: '../.env'`
+- ฐานข้อมูลเชื่อมผ่าน TypeORM (`autoLoadEntities: true`, `synchronize: true`)
 
 ### ทั่วไป
-- Commits ตาม Conventional Commits: `feat:`, `fix:`, `docs:`, `chore:`, `refactor:`, `test:`
+- Commits ตาม Conventional Commits: `feat:`, `fix:`, `docs:`, `chore:`
 - Secrets ทั้งหมดผ่าน environment variables — **ห้าม hardcode**
-- TypeScript strict mode ทั้ง frontend และ backend
-- ใช้ ESLint + Prettier
-
----
-
-## ไฟล์สำคัญที่ควรรู้
-
-| ไฟล์ | หน้าที่ |
-|---|---|
-| `backend/src/app.module.ts` | Root module ของ NestJS — ลงทะเบียนทุก module |
-| `backend/src/main.ts` | Entry point ของ backend (ตั้งค่า port, CORS) |
-| `backend/src/modules/cv/` | Module จัดการข้อมูล CV |
-| `frontend/src/routes/+layout.svelte` | Root layout ของ SvelteKit |
-| `frontend/src/routes/+page.svelte` | หน้าแรกของเว็บไซต์ |
-| `frontend/src/lib/api.ts` | Centralized API client |
-| `frontend/svelte.config.js` | ตั้งค่า SvelteKit (adapter, paths) |
-| `frontend/vite.config.ts` | ตั้งค่า Vite (plugins, proxy) |
-| `nginx/nginx.conf` | กฎ routing ของ Nginx |
-| `docker-compose.yml` | Orchestration สำหรับ production |
-| `docker-compose.dev.yml` | Orchestration สำหรับ development |
-| `.env.example` | Template ตัวแปรสภาพแวดล้อม |
 
 ---
 
 ## ข้อผิดพลาดที่พบบ่อย
 
-1. **CORS** — backend อนุญาต `ALLOWED_ORIGIN` ที่กำหนดใน env ถ้า API ถูกบล็อก ให้ตรวจสอบค่านี้ก่อน
-2. **Vite HMR ไม่ทำงาน** — ตรวจสอบว่า nginx.conf มี location block สำหรับ `/__vite_hmr` และ WebSocket upgrade headers ถูกต้อง
-3. **VITE_API_URL ไม่ถูกส่งไปยัง browser** — ตัวแปร `VITE_*` ถูก embed ตอน build time ดังนั้นต้อง rebuild frontend หลังเปลี่ยนค่า
-4. **Database connection ล้มเหลว** — ตรวจสอบว่า `DB_HOST`, `DB_PORT`, `DB_USERNAME`, `DB_PASSWORD` ตรงกับค่าใน postgres service
-5. **Migrations** — รัน `migration:run` เสมอหลัง pull ที่มีการแก้ไข entities
-6. **Redis ล่ม** — ถ้า Redis ไม่ทำงาน auth จะล้มเหลว ตรวจสอบ `redis` container ก่อน
-7. **Nginx upstream** — ชื่อ service ใน `docker-compose.yml` ต้องตรงกับชื่อ upstream ใน `nginx.conf` เสมอ
-8. **Port ชนกัน** — frontend ใช้ port 3000, backend ใช้ 3001 ถ้ารัน local ต้องแน่ใจว่า port ไม่ซ้ำ
-9. **`/app/.next` ไม่มีแล้ว** — โปรเจกต์ migrate จาก Next.js เป็น SvelteKit ลบ reference ถึง `.next` ทั้งหมด
+| ปัญหา | สาเหตุ | วิธีแก้ |
+|---|---|---|
+| `JwtStrategy requires a secret or key` | Backend หาไฟล์ `.env` ไม่เจอ หรือ `JWT_SECRET` ว่าง | ตรวจว่ามีไฟล์ `.env` อยู่ที่ root project และ `JWT_SECRET` มีค่า |
+| `npm ci` ล้มเหลว (EPERM) | ไฟล์ใน `node_modules` ถูกล็อกโดย Windows | ปิดโปรแกรมที่ใช้ไฟล์นั้น แล้วลบ `node_modules` ด้วย Force Delete |
+| Frontend แสดงหน้าเปล่า (ไม่มีข้อมูล) | `VITE_API_URL` ชี้ผิด หรือ Vite proxy ไม่มี rewrite | ตั้ง `VITE_API_URL=/api` (local) และตรวจ `vite.config.ts` มี rewrite |
+| `EADDRINUSE: address already in use` | มี process เก่าค้างอยู่บน port เดียวกัน | Kill process เก่า: `Stop-Process -Name "node" -Force` |
+| CORS blocked | `ALLOWED_ORIGIN` ไม่ตรงกับ URL ของ frontend | แก้ค่า `ALLOWED_ORIGIN` ใน `.env` ให้ตรง |
+| Vite HMR ไม่ทำงาน (Docker) | nginx.conf ขาด location block สำหรับ `/__vite_hmr` | ตรวจว่ามี WebSocket upgrade headers ใน nginx.conf |
 
 ---
 
-## วิธีเพิ่ม Feature ใหม่
-
-### Backend
-1. สร้าง `backend/src/modules/<name>/` พร้อม module / controller / service / dto / entity
-2. ลงทะเบียน module ใน `AppModule` (`app.module.ts`)
-3. สร้าง migration ถ้ามี entity ใหม่: `npm run migration:generate -- -n CreateXxxTable`
-
-### Frontend
-1. สร้าง route ใหม่ใน `frontend/src/routes/<name>/+page.svelte`
-2. ถ้าต้องโหลดข้อมูลจาก server สร้าง `+page.server.ts` หรือ `+page.ts`
-3. เพิ่ม API function ใน `src/lib/api.ts`
-4. สร้าง component ที่ reusable ใน `src/lib/components/`
-
-### สุดท้าย
-- อัปเดตไฟล์ `CLAUDE.md` นี้ถ้ามีการเปลี่ยนแปลง architecture
-- อัปเดต `README.md` ถ้ามี endpoint ใหม่
-- เขียน test สำหรับทั้ง backend (Jest) และ frontend
-
----
-
-## Tech Stack Reference
+## Tech Stack
 
 | เทคโนโลยี | เวอร์ชัน | หน้าที่ |
 |---|---|---|
-| SvelteKit | latest | Frontend framework (SSR + SPA) |
-| Vite | latest | Build tool + dev server |
-| NestJS | 10.x | Backend framework |
-| TypeORM | 0.3.x | ORM สำหรับฐานข้อมูล |
-| PostgreSQL | 16 | ฐานข้อมูลหลัก |
-| Redis | 7 | Cache + session store |
-| Nginx | 1.25 | Reverse proxy + load balancer |
+| SvelteKit | 2.x | Frontend framework (SSR + SPA) |
+| Svelte | 5.x | UI component framework |
+| Vite | 6.x | Build tool + dev server |
+| NestJS | 10.x | Backend REST API framework |
+| TypeORM | 0.3.x | ORM (PostgreSQL + SQLite) |
+| PostgreSQL | 16 | ฐานข้อมูลหลัก (Docker) |
+| SQLite | 5.x | ฐานข้อมูลสำหรับ Local dev |
+| Redis | 7 | Cache + session (Docker) |
+| Nginx | 1.25 | Reverse proxy + SSL termination |
 | Docker | latest | Containerization |
-| Node.js | 20 | Runtime |
-| TypeScript | 5.x | ภาษาหลัก (ทั้ง frontend + backend) |
+| Node.js | 20+ | Runtime |
+| TypeScript | 5.x | ภาษาหลัก |
+| Lucide | latest | ไลบรารีไอคอน (@lucide/svelte) |

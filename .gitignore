@@ -26,3 +26,11 @@ Thumbs.db
 .vscode/settings.json
 .idea/
 *.swp
+
+# ── SSL Certificates (Private Keys) ──────────────────
+nginx/ssl/*.key
+nginx/ssl/*.crt
+
+# ── SvelteKit ─────────────────────────────────────────
+.svelte-kit/
+build/
