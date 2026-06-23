@@ -26,7 +26,7 @@
 </script>
 
 <svelte:head>
-  <title>พอร์ตโฟลิโอ | Napatwan Chaiban</title>
+  <title>CV</title>
 </svelte:head>
 
 <div class="container section-gap">
