@@ -1,7 +1,9 @@
 <script lang="ts">
-  import { Trophy, FolderOpen, Calendar } from '@lucide/svelte';
+  import { Trophy, FolderOpen, Calendar, Plus, Trash2 } from '@lucide/svelte';
   import EditableText from './EditableText.svelte';
+  import { isAdmin, addItem, removeItem } from '$lib/stores/cv';
   import type { CvAchievement } from '$lib/api';
+  import { fade, fly } from 'svelte/transition';
 
   export let achievements: CvAchievement[];
 
@@ -25,13 +27,33 @@
     return achievements.indexOf(item);
   }
 
+  function handleAdd() {
+    addItem('achievements', {
+      title: 'ผลงานใหม่',
+      date: '',
+      category: 'อื่นๆ'
+    });
+  }
+
+  function handleRemove(index: number) {
+    removeItem('achievements', index);
+  }
+
   $: grouped = groupByCategory(achievements);
 </script>
 
 <section class="glass-card">
-  <h2 class="section-title amber">
-    🏅 ผลงานและเกียรติบัตร
-  </h2>
+  <div class="section-header">
+    <h2 class="section-title amber">
+      🏅 ผลงานและเกียรติบัตร
+    </h2>
+    {#if $isAdmin}
+      <button class="btn-add" on:click={handleAdd} transition:fade={{ duration: 200 }}>
+        <Plus size={14} />
+        เพิ่ม
+      </button>
+    {/if}
+  </div>
 
   {#each Object.entries(grouped) as [category, items]}
     <div class="achievement-group">
@@ -42,7 +64,7 @@
 
       {#each items as item}
         {@const idx = getOriginalIndex(item)}
-        <div class="achievement-item">
+        <div class="achievement-item" in:fly={{ x: -10, duration: 250 }}>
           <div class="achievement-title">
             <Trophy size={14} class="trophy-icon" />
             <EditableText
@@ -51,12 +73,23 @@
               className="achievement-text"
             />
           </div>
-          <div class="achievement-date">
-            <Calendar size={12} />
-            <EditableText
-              path={`achievements[${idx}].date`}
-              value={item.date}
-            />
+          <div class="achievement-right">
+            <div class="achievement-date">
+              <Calendar size={12} />
+              <EditableText
+                path={`achievements[${idx}].date`}
+                value={item.date}
+              />
+            </div>
+            {#if $isAdmin}
+              <button
+                class="btn-remove"
+                on:click={() => handleRemove(idx)}
+                transition:fade={{ duration: 200 }}
+              >
+                <Trash2 size={12} />
+              </button>
+            {/if}
           </div>
         </div>
       {/each}
@@ -69,6 +102,17 @@
 </section>
 
 <style>
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+  }
+
+  .section-header .section-title {
+    margin-bottom: 0;
+  }
+
   .achievement-title {
     display: flex;
     align-items: center;
@@ -88,6 +132,13 @@
     line-height: 1.4;
   }
 
+  .achievement-right {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+  }
+
   .achievement-date {
     display: flex;
     align-items: center;
@@ -96,7 +147,6 @@
     color: var(--amber);
     font-family: var(--font-heading);
     white-space: nowrap;
-    flex-shrink: 0;
   }
 
   .empty-text {

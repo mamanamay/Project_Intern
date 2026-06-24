@@ -93,6 +93,19 @@ export interface CvSocialLinks {
   linkedin: string;
 }
 
+export interface CvCustomBlockItem {
+  title: string;
+  period: string;
+  description: string;
+}
+
+export interface CvCustomBlock {
+  id: string;
+  title: string;
+  emoji: string;
+  items: CvCustomBlockItem[];
+}
+
 export interface CvData {
   profile: CvProfile;
   education: CvEducation[];
@@ -101,6 +114,7 @@ export interface CvData {
   projects: CvProject[];
   skills: CvSkills;
   socialLinks: CvSocialLinks;
+  customBlocks: CvCustomBlock[];
 }
 
 export const cvApi = {

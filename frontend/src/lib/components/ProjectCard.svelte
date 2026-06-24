@@ -1,19 +1,41 @@
 <script lang="ts">
-  import { Rocket, Code, FileText } from '@lucide/svelte';
+  import { Rocket, Code, FileText, Plus, Trash2 } from '@lucide/svelte';
   import EditableText from './EditableText.svelte';
+  import { isAdmin, addItem, removeItem } from '$lib/stores/cv';
   import type { CvProject } from '$lib/api';
+  import { fade, fly } from 'svelte/transition';
 
   export let projects: CvProject[];
+
+  function handleAdd() {
+    addItem('projects', {
+      title: 'โปรเจคใหม่',
+      code: '',
+      description: 'รายละเอียดโปรเจค...'
+    });
+  }
+
+  function handleRemove(index: number) {
+    removeItem('projects', index);
+  }
 </script>
 
 <section id="projects" class="glass-card">
-  <h2 class="section-title cyan">
-    🚀 โปรเจค
-  </h2>
+  <div class="section-header">
+    <h2 class="section-title cyan">
+      🚀 โปรเจค
+    </h2>
+    {#if $isAdmin}
+      <button class="btn-add" on:click={handleAdd} transition:fade={{ duration: 200 }}>
+        <Plus size={14} />
+        เพิ่ม
+      </button>
+    {/if}
+  </div>
 
   <div class="project-grid">
-    {#each projects as project, i}
-      <div class="project-card">
+    {#each projects as project, i (i)}
+      <div class="project-card" in:fly={{ y: 20, duration: 300, delay: i * 80 }}>
         <div class="project-header">
           <div class="project-icon">
             <Rocket size={20} />
@@ -35,6 +57,15 @@
               </div>
             {/if}
           </div>
+          {#if $isAdmin}
+            <button
+              class="btn-remove project-remove"
+              on:click={() => handleRemove(i)}
+              transition:fade={{ duration: 200 }}
+            >
+              <Trash2 size={12} />
+            </button>
+          {/if}
         </div>
 
         <div class="project-desc">
@@ -55,6 +86,17 @@
 </section>
 
 <style>
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+  }
+
+  .section-header .section-title {
+    margin-bottom: 0;
+  }
+
   .project-grid {
     display: grid;
     grid-template-columns: 1fr;
@@ -126,6 +168,10 @@
   :global(.desc-text) {
     font-size: 0.85rem;
     color: var(--text-secondary);
+  }
+
+  .project-remove {
+    flex-shrink: 0;
   }
 
   .empty-text {

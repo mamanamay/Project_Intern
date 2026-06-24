@@ -13,6 +13,7 @@
       <a href="#education">การศึกษา</a>
       <a href="#skills">ทักษะ</a>
       <a href="#projects">โปรเจค</a>
+      <a href="#contact">ติดต่อ</a>
     </div>
   </div>
 </nav>

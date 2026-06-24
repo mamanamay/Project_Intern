@@ -68,7 +68,21 @@ export const initialCvData = {
   socialLinks: {
     github: 'https://github.com/mamanamay',
     linkedin: 'https://www.linkedin.com/in/napatwan-chaiban-436798348/'
-  }
+  },
+  customBlocks: [
+    {
+      id: 'work-exp-default',
+      title: 'ประสบการณ์ทำงาน',
+      emoji: '💼',
+      items: [
+        {
+          title: 'Cybersecurity Intern',
+          period: 'Coming Soon',
+          description: 'กำลังหาตำแหน่งฝึกงานด้าน Cybersecurity / IT / Network'
+        }
+      ]
+    }
+  ]
 };
 
 @Injectable()
