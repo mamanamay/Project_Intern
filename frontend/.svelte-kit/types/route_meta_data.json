@@ -1,3 +1,9 @@
 {
-	"/": []
+	"/": [],
+	"/api/cv": [
+		"src/routes/api/cv/+server.ts"
+	],
+	"/api/cv/stream": [
+		"src/routes/api/cv/stream/+server.ts"
+	]
 }
