@@ -21,8 +21,8 @@
 
 <section class="glass-card">
   <div class="section-header">
-    <h2 class="section-title violet">
-      🏆 ใบรับรอง
+    <h2 class="section-title violet glitch-text" data-text="📜 CERTIFICATIONS">
+      📜 CERTIFICATIONS
     </h2>
     {#if $isAdmin}
       <button class="btn-add" on:click={handleAdd} transition:fade={{ duration: 200 }}>

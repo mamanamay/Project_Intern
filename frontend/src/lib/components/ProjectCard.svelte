@@ -22,8 +22,8 @@
 
 <section id="projects" class="glass-card">
   <div class="section-header">
-    <h2 class="section-title cyan">
-      🚀 โปรเจค
+    <h2 class="section-title cyan glitch-text" data-text="🚀 PROJECTS">
+      🚀 PROJECTS
     </h2>
     {#if $isAdmin}
       <button class="btn-add" on:click={handleAdd} transition:fade={{ duration: 200 }}>

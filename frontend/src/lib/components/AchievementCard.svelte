@@ -44,8 +44,8 @@
 
 <section class="glass-card">
   <div class="section-header">
-    <h2 class="section-title amber">
-      🏅 ผลงานและเกียรติบัตร
+    <h2 class="section-title amber glitch-text" data-text="🏆 ACHIEVEMENTS">
+      🏆 ACHIEVEMENTS
     </h2>
     {#if $isAdmin}
       <button class="btn-add" on:click={handleAdd} transition:fade={{ duration: 200 }}>

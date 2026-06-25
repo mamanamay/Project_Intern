@@ -63,7 +63,7 @@
   </div>
 {:else}
   <div class="editable-wrapper">
-    <span class={className}>{value}</span>
+    <span class={className} data-text={value}>{value}</span>
     {#if $isAdmin}
       <button class="edit-btn" on:click={startEdit} title="แก้ไข">
         <Pencil size={14} />

@@ -19,8 +19,8 @@
 </script>
 
 <section id="skills" class="glass-card">
-  <h2 class="section-title emerald">
-    ⚡ ทักษะ
+  <h2 class="section-title emerald glitch-text" data-text="⚡ SKILLS">
+    ⚡ SKILLS
   </h2>
 
   <div class="skills-grid">

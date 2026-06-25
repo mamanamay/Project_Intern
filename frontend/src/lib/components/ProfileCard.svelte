@@ -10,9 +10,7 @@
 <section id="profile" class="glass-card profile-section">
   <div class="profile-header">
     <div class="avatar-ring">
-      <div class="avatar-placeholder">
-        {data.profile.name.charAt(0)}
-      </div>
+      <img src="/profile.jpg" alt="Profile" class="profile-img" on:error={(e) => e.currentTarget.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiNlMmU4ZjAiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1zaXplPSI0MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgYWxpZ25tZW50LWJhc2VsaW5lPSJjZW50cmFsIiBmaWxsPSIjMGYxNzJhIj4/PC90ZXh0Pjwvc3ZnPg=='}/>
     </div>
 
     <div class="profile-info">
@@ -95,6 +93,23 @@
     height: 4px;
     background: linear-gradient(90deg, var(--cyan), var(--violet), var(--emerald));
     border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  }
+
+  .avatar-ring {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    padding: 4px;
+    background: linear-gradient(135deg, var(--cyan), var(--emerald));
+    flex-shrink: 0;
+  }
+
+  .profile-img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid var(--bg-secondary);
   }
 
   .profile-header {

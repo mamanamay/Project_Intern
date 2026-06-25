@@ -31,7 +31,7 @@
       <EditableText
         path={`customBlocks[${blockIndex}].title`}
         value={block.title}
-        className="block-title-text"
+        className="block-title-text glitch-text"
       />
     </div>
 
